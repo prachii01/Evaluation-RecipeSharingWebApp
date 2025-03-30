@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Sharing App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f8f8;
+            color: #333;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        header {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-right: 20px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background: white;
+            border-radius: 5px;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #recipes-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .dark-mode {
+            background: #222;
+            color: #fff;
+        }
+
+        .dark-mode header {
+            background: linear-gradient(to right, #4b79a1, #283e51);
+        }
+
+        .dark-mode .recipe-card {
+    background: #333;
+    color: #f1f1f1;
+    border: 1px solid #555;
+}
+.dark-mode .recipe-card h3, 
+.dark-mode .recipe-card h4 {
+    color: #ffcc66;
+}
+.dark-mode .recipe-card table {
+    background: #444;
+    color: #f1f1f1;
+    border-color: #777;
+}
+.dark-mode .recipe-card td, 
+.dark-mode .recipe-card th {
+    border-color: #888;
+}
+
+
+
+.recipe-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.recipe-card:hover {
+    transform: scale(1.05);
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Mode Hover Effect */
+.dark-mode .recipe-card:hover {
+    transform: scale(1.05);
+    box-shadow: 5px 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+        @media (max-width: 600px) {
+            nav ul {
+                flex-direction: column;
+            }
+
+            .recipe-card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Recipe Sharing App</h1>
+        <nav>
+            <ul>
+                <li><a onclick="showSection('home')">Home</a></li>
+                <li><a onclick="showSection('add-recipe')">Add Recipe</a></li>
+                <li><a onclick="showSection('view-recipes')">View Recipes</a></li>
+            </ul>
+        </nav>
+        <button id="darkModeToggle">🌙</button>
+    </header>
+
+    <main>
+        <section id="home">
+            <h2>Welcome to the Recipe Sharing App</h2>
+            <p>Share and explore delicious recipes.</p>
+        </section>
+
+        <section id="add-recipe" class="hidden">
+            <h2>Add a New Recipe</h2>
+            <form id="recipe-form">
+                <label for="name">Recipe Name:</label>
+                <input type="text" id="name" required>
+
+                <label for="ingredients">Ingredients (comma-separated):</label>
+                <textarea id="ingredients" required></textarea>
+
+                <label for="category">Category:</label>
+                <select id="category" required>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Dessert">Dessert</option>
+                    <option value="Drinks">Drinks</option>
+                </select>
+
+                <label for="steps">Preparation Steps:</label>
+                <textarea id="steps" required></textarea>
+
+                <button type="submit">Add Recipe</button>
+            </form>
+        </section>
+
+        <section id="view-recipes" class="hidden">
+            <h2>Recipes</h2>
+            <label for="filter">Filter by Category:</label>
+            <select id="filter">
+                <option value="All">All</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Dessert">Dessert</option>
+                <option value="Drinks">Drinks</option>
+            </select>
+            <div id="recipes-container"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Recipe Sharing App</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            loadRecipes();
+            document.getElementById("recipe-form").addEventListener("submit", addRecipe);
+            document.getElementById("filter").addEventListener("change", filterRecipes);
+            document.getElementById("darkModeToggle").addEventListener("click", toggleDarkMode);
+        });
+
+        function showSection(sectionId) {
+            document.querySelectorAll("main section").forEach(section => {
+                section.classList.add("hidden");
+            });
+
+            document.getElementById(sectionId).classList.remove("hidden");
+
+            // Load recipes if the View Recipes section is displayed
+            if (sectionId === "view-recipes") {
+                loadRecipes();
+            }
+        }
+
+        function addRecipe(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const ingredients = document.getElementById("ingredients").value.split(",");
+            const category = document.getElementById("category").value;
+            const steps = document.getElementById("steps").value;
+
+            const newRecipe = { name, ingredients, category, steps };
+
+            let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
+            recipes.push(newRecipe);
+            localStorage.setItem("recipes", JSON.stringify(recipes));
+
+            document.getElementById("recipe-form").reset();
+            showSection("view-recipes"); 
+        }
+
+        function loadRecipes() {
+            const recipesContainer = document.getElementById("recipes-container");
+            recipesContainer.innerHTML = "";
+
+            let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
+
+            if (recipes.length === 0) {
+                recipesContainer.innerHTML = "<p>No recipes found. Add some!</p>";
+                return;
+            }
+
+            recipes.forEach((recipe) => {
+                const recipeCard = document.createElement("div");
+                recipeCard.classList.add("recipe-card");
+
+                recipeCard.innerHTML = `
+                    <h3>${recipe.name}</h3>
+                    <p><strong>Category:</strong> ${recipe.category}</p>
+                    <h4>Ingredients</h4>
+                    <table border="1">
+                        <tr><th>Ingredient</th></tr>
+                        ${recipe.ingredients.map(ing => `<tr><td>${ing.trim()}</td></tr>`).join("")}
+                    </table>
+                    <h4>Preparation Steps</h4>
+                    <p>${recipe.steps}</p>
+                `;
+
+                recipesContainer.appendChild(recipeCard);
+            });
+        }
+
+        
+        function filterRecipes() {
+    const selectedCategory = document.getElementById("filter").value;
+    let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
+
+    if (selectedCategory !== "All") {
+        recipes = recipes.filter(recipe => recipe.category === selectedCategory);
+    }
+
+    const recipesContainer = document.getElementById("recipes-container");
+    recipesContainer.innerHTML = "";
+
+    if (recipes.length === 0) {
+        recipesContainer.innerHTML = "<p>No recipes found in this category.</p>";
+        return;
+    }
+
+    recipes.forEach(recipe => {
+        const recipeCard = document.createElement("div");
+        recipeCard.classList.add("recipe-card");
+
+        recipeCard.innerHTML = `
+            <h3>${recipe.name}</h3>
+            <p><strong>Category:</strong> ${recipe.category}</p>
+            <h4>Ingredients</h4>
+            <table border="1">
+                <tr><th>Ingredient</th></tr>
+                ${recipe.ingredients.map(ing => `<tr><td>${ing.trim()}</td></tr>`).join("")}
+            </table>
+            <h4>Preparation Steps</h4>
+            <p>${recipe.steps}</p>
+        `;
+
+        recipesContainer.appendChild(recipeCard);
+    });
+}
+
+
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+    </script>
+</body>
+</html>   
